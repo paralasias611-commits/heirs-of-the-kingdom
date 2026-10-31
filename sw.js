@@ -1,0 +1,6 @@
+const V='heirs-v2',ST=['./','index.html','manifest.json','lib/qrcode.js','lib/jsQR.js'],IM=['rey', 'reina', 'principe', 'princesa', 'herencia_del_trono', 'punalada_en_la_corte', 'artimana_defensiva', 'golpe_de_estado', 'guardia_real', 'copa_envenenada', 'antidoto_real', 'secuestro', 'rescate', 'emboscada', 'refuerzos', 'sentencia_real', 'reloj_del_linaje_eterno', 'edicto_de_la_corte', 'titiritero_del_reino', 'tributo_al_rey', 'usurpador_de_tumbas', 'pacto_del_consejo', 'ritual_del_linaje', 'barricada_real', 'ecos_del_reino', 'maniobra_real', 'espejismo_de_la_corona', 'orden_de_reposo', 'reverso'].map(i=>'assets/cards/'+i+'.png');
+self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all([...ST,...IM].map(u=>c.add(u).catch(()=>0)))));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;
+ if(r.url.includes('/assets/')){e.respondWith(caches.match(r).then(h=>h||fetch(r).then(n=>{const c=n.clone();caches.open(V).then(x=>x.put(r,c));return n})));return}
+ e.respondWith(fetch(r).then(n=>{const c=n.clone();caches.open(V).then(x=>x.put(r,c));return n}).catch(()=>caches.match(r)))});
