@@ -289,7 +289,7 @@ const tgTit=a=>(i,s)=>{const h=G.ps[i].sl[s];return i!=a&&G.ps[i].alive&&h&&!h.i
 const blk=(a,c)=>(G.bar&&c.r<=2)||(G.noR1&&a!=G.cur&&c.r>=1);
 const pay_=(a,n,ex)=>{const p=G.ps[a];return p.hand.length+p.hid.length-([...p.hand,...p.hid].includes(ex)?1:0)>=n};
 const gOk=(c,a)=>'hadm'.includes(c.t)&&!['punalada_en_la_corte','artimana_defensiva','usurpador_de_tumbas'].includes(c.id)&&canPlay(a,c,'grave');
-function canPlay(a,c,src){const p=G.ps[a];if(blk(a,c)||('mt'.includes(c.t)&&G.used[c.id]))return false;
+function canPlay(a,c,src){const p=G.ps[a];if(blk(a,c)||((c.t=='m'&&G.used[c.id])||(c.t=='t'&&G.used[a+':'+c.id])))return false;
  if(c.t=='h')return!p.sl[OR.indexOf(c.k)];
  if(c.t=='m'){const id=c.id;if(id=='titiritero_del_reino')return pay_(a,1,c)&&G.ps.some((q,i)=>[0,1,2,3].some(s=>tgTit(a)(i,s)));
   if(id=='usurpador_de_tumbas')return pay_(a,1,c)&&G.grave.some(x=>gOk(x,a));if(id=='ritual_del_linaje')return p.sl.some(Boolean);return true}
@@ -335,7 +335,7 @@ function act(){const{c,src}=G.sel,p=G.ps[G.cur],arr=src=='hand'?p.hand:p.hid;
  closeM(()=>actCard(G.cur,c,()=>arr.splice(arr.indexOf(c),1),()=>{G.tp=null;render();botNext()},()=>render()))}
 function selT(ok,cb,x,w,c){if(isBot(w==null?G.cur:w))return botSel(ok,cb,c);G.tg={ok,cb,x};G.tgw=w==null?G.cur:w;closeM();render();toast('Elige el heredero')}
 function actCard(a,c,rmf,done,cancel){const p=G.ps[a],id=c.id,
- fin=(tg,pre)=>{if('mt'.includes(c.t))G.used[id]=1;if(c.t=='s')G.sr=1;rmf();runChain(mk(a,c,tg),done,pre)},
+ fin=(tg,pre)=>{if(c.t=='m')G.used[id]=1;if(c.t=='t')G.used[a+':'+id]=1;if(c.t=='s')G.sr=1;rmf();runChain(mk(a,c,tg),done,pre)},
  pay=(n,tg)=>fin(tg,n?k=>payUI(a,n,c,k):null);
  if(c.t=='m'){if(id=='titiritero_del_reino')return selT(tgTit(a),(i,s)=>pay(1,{i,s}),cancel,a,c);
   if(id=='ritual_del_linaje')return selT((i,s)=>i==a&&p.sl[s],(i,s)=>fin(null,k=>{kill(p,s);render();k()}),cancel,a,c);
@@ -402,14 +402,14 @@ function showAsk(pi,top,o,pass,resp,pg){if(isBot(pi)){const x=botResp(pi,top,o);
 function askPg(d){const a=G.ask;showAsk(a.pi,a.top,a.o,a.pass,a.resp,a.pg+d)}
 function askNo(){G.ask.pass()}
 function askYes(){const a=G.ask;if(a.o.length==1)return a.resp(a.o[0]);gp({t:'Elige la carta',items:a.o.map(x=>({h:card(x.c)})),c:5,r:1,w:a.pi,bk:'first',cb:k=>a.resp(a.o[k])})}
-function respOpts(pi,top){const p=G.ps[pi],o=[],add=(c,src)=>{if(blk(pi,c)||('xt'.includes(c.t)&&G.used[c.id]))return;const id=c.id,q=top.pi!=pi;
+function respOpts(pi,top){const p=G.ps[pi],o=[],add=(c,src)=>{if(blk(pi,c)||('xt'.includes(c.t)&&G.used[pi+':'+c.id]))return;const id=c.id,q=top.pi!=pi;
   let ok=id=='orden_de_reposo'?q:id=='espejismo_de_la_corona'?q&&top.atk:id=='ecos_del_reino'?q&&top.r<=2&&top.c.t=='m':id=='maniobra_real'?top.atk&&top.c.t!='s'&&top.tg&&top.tg.i==pi:id=='barricada_real'?true:c.t=='d'?top.atk&&top.tg&&top.tg.i==pi&&tgOk(c,pi)(pi,top.tg.s):false;
   if(ok&&src=='hand'&&!pay_(pi,1,c))ok=false;if(ok&&id=='barricada_real'&&!pay_(pi,2,c))ok=false;if(ok)o.push({c,src})};
  p.hand.forEach(c=>c.t=='x'&&add(c,'hand'));p.hid.forEach(c=>{if(c.pt<G.tn&&'txd'.includes(c.t))add(c,'hid')});return o}
 const sumOpts=(i,top)=>{const h=G.ps[top.pi].sl[top.s];return!h||h.imm?[]:G.ps[i].hid.filter(c=>c.t=='a'&&c.pt<G.tn&&!blk(i,c)&&(!c.k||h.as==c.k)&&!(c.id=='punalada_en_la_corte'&&h.atk.some(x=>x.id==c.id))).map(c=>({c,src:'hid'}))};
 function summonWin(a,s,after){const h=G.ps[a].sl[s];if(!h)return after();asking({pi:a,s,c:h.c,r:0},sumOpts,(l,pr)=>runChain(l,after,pr),after)}
 function doResp(pi,o,top,cb,back){const{c,src}=o,p=G.ps[pi],arr=src=='hand'?p.hand:p.hid,tg0=c.t=='a'?{i:top.pi,s:top.s}:c.t=='d'?top.tg:null,n=src=='hand'?1:c.id=='barricada_real'?2:0,
- go=tg=>{if('xt'.includes(c.t))G.used[c.id]=1;arr.splice(arr.indexOf(c),1);cb(mk(pi,c,tg||tg0,top),n?k=>payUI(pi,n,c,k):null)};
+ go=tg=>{if('xt'.includes(c.t))G.used[pi+':'+c.id]=1;arr.splice(arr.indexOf(c),1);cb(mk(pi,c,tg||tg0,top),n?k=>payUI(pi,n,c,k):null)};
  if(c.id=='maniobra_real')return selT((i,s)=>G.ps[i].alive&&G.ps[i].sl[s]&&!(i==top.tg.i&&s==top.tg.s),(i,s)=>go({i,s}),back,pi,c);go()}
 function discardUI(pi,min,max,cb){if(isBot(pi))return botDiscard(pi,min,cb);const p=G.ps[pi];let sel=-1;
  const dr=()=>modal(`<h3>${p.n}: descarta ${min} ${min==1?'carta':'cartas'}</h3><div class=lst>${p.hand.map((c,i)=>`<div class="${sel==i?'on':''}" onclick=dsel(${i})>${card(c)}</div>`).join('')}</div><div class=btns><button class=pri ${sel>=0?'':'disabled'} onclick=dok()>Descartar</button></div>`,pi);
@@ -539,6 +539,7 @@ function botGp(o){const idx=o.items.map((_,i)=>i).filter(i=>o.items[i].ok!==fals
 function botDiscard(pi,n,cb){const p=G.ps[pi];for(let k=0;k<n;k++){const c=[...p.hand].sort((a,b)=>cv(a)-cv(b))[0];if(c){p.hand.splice(p.hand.indexOf(c),1);G.grave.push(c)}}render();setTimeout(cb,300)}
 function botResp(pi,top,o){if(!['hard','imp'].includes(G.lv)||!o.length)return null;const f=id=>o.find(x=>x.c.id==id),hit=top.atk&&top.tg&&top.tg.i==pi;
  if(top.fx===undefined&&top.s!==undefined)return o[0];
+ if(top.on&&top.on.pi==pi&&['espejismo_de_la_corona','orden_de_reposo'].includes(top.c.id))return f('orden_de_reposo')||null;
  if(top.atk&&top.c.t=='s'&&top.pi!=pi)return f('espejismo_de_la_corona')||f('orden_de_reposo')||f('barricada_real')||null;
  if(hit)return o.find(x=>x.c.t=='d')||f('espejismo_de_la_corona')||f('maniobra_real')||f('orden_de_reposo')||f('barricada_real')||null;
  if(top.c.id=='titiritero_del_reino'&&top.tg&&top.tg.i==pi)return f('orden_de_reposo')||f('barricada_real')||null;
